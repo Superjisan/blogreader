@@ -14,6 +14,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.ProgressBar;
+import android.widget.SimpleAdapter;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -28,16 +29,20 @@ import java.io.Reader;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.ArrayList;
+import java.util.HashMap;
 
 
 public class MainListActivity extends ListActivity {
 
 
-    protected String[] mBlogPostTitles;
     public static final int NUMBER_OF_POSTS = 10;
     public static String TAG = MainListActivity.class.getSimpleName();
     protected JSONObject mBlogData;
     protected ProgressBar mProgressBar;
+
+    private final String KEY_TITLE = "title";
+    private final String AUTHOR = "author";
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -82,16 +87,27 @@ public class MainListActivity extends ListActivity {
         }else{
             try {
                 JSONArray jsonPosts = mBlogData.getJSONArray("posts");
-                mBlogPostTitles = new String[jsonPosts.length()];
+                ArrayList<HashMap<String, String>> blogPosts =
+                        new ArrayList<HashMap<String, String>>();
+
                 for(int i = 0; i < jsonPosts.length(); i++){
                     JSONObject post = jsonPosts.getJSONObject(i);
-                    String title = post.getString("title");
+                    String title = post.getString(KEY_TITLE);
                     title = Html.fromHtml(title).toString();
-                    mBlogPostTitles[i] = title;
+                    String author = post.getString(AUTHOR);
+                    author = Html.fromHtml(author).toString();
+
+                    HashMap<String, String> blogPost = new HashMap<String, String>();
+                    blogPost.put(KEY_TITLE, title);
+                    blogPost.put(AUTHOR, author);
+
+                    blogPosts.add(blogPost);
                 }
 
-                ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
-                        android.R.layout.simple_expandable_list_item_1, mBlogPostTitles);
+                String[] keys = {KEY_TITLE, AUTHOR};
+                int[] ids = {android.R.id.text1, android.R.id.text2};
+
+                SimpleAdapter adapter = new SimpleAdapter(this, blogPosts, android.R.layout.simple_list_item_2, keys, ids );
                 setListAdapter(adapter);
             } catch (JSONException e) {
                 Log.e(TAG, "Exception caught");
