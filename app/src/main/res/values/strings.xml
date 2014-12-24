@@ -7,6 +7,7 @@
     <string name="no_items">No items to display!</string>
     <string name="error_title">Oops!</string>
     <string name="error_message">There was an error getting data from blog.</string>
+    <string name="share_chooser_title">How do you want to share?</string>
 
     <string-array name="superHeroes">
         <item>"Superman"</item>
@@ -19,5 +20,6 @@
     </string-array>
 
     <string name="title_activity_blog_web_view">Blog Post</string>
+    <string name="action_share">Share</string>
 
 </resources>
