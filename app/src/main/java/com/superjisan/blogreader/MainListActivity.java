@@ -1,6 +1,7 @@
 package com.superjisan.blogreader;
 
 import android.app.Activity;
+import android.app.AlertDialog;
 import android.app.ListActivity;
 import android.content.Context;
 import android.content.res.Resources;
@@ -8,6 +9,7 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.text.Html;
 import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
@@ -15,6 +17,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Toast;
 
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 import java.io.IOException;
@@ -32,6 +35,7 @@ public class MainListActivity extends ListActivity {
     protected String[] mBlogPostTitles;
     public static final int NUMBER_OF_POSTS = 10;
     public static String TAG = MainListActivity.class.getSimpleName();
+    protected JSONObject mBlogData;
 
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -67,6 +71,30 @@ public class MainListActivity extends ListActivity {
         return true;
     }
 
+    private void updateList() {
+        if(mBlogData == null){
+            AlertDialog.Builder builder  = new AlertDialog.Builder(this);
+            builder.setTitle()
+        }else{
+            try {
+                JSONArray jsonPosts = mBlogData.getJSONArray("posts");
+                mBlogPostTitles = new String[jsonPosts.length()];
+                for(int i = 0; i < jsonPosts.length(); i++){
+                    JSONObject post = jsonPosts.getJSONObject(i);
+                    String title = post.getString("title");
+                    title = Html.fromHtml(title).toString();
+                    mBlogPostTitles[i] = title;
+                }
+
+                ArrayAdapter<String> adapter = new ArrayAdapter<String>(this,
+                        android.R.layout.simple_expandable_list_item_1, mBlogPostTitles);
+                setListAdapter(adapter);
+            } catch (JSONException e) {
+                Log.e(TAG, "Exception caught");
+            }
+        }
+    }
+
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         // Handle action bar item clicks here. The action bar will
@@ -79,11 +107,12 @@ public class MainListActivity extends ListActivity {
         return super.onOptionsItemSelected(item);
     }
 
-    private class GetBlogPostsTask extends AsyncTask<Object, Void, String>{
+    private class GetBlogPostsTask extends AsyncTask<Object, Void, JSONObject>{
 
         @Override
-        protected String doInBackground(Object... objects) {
+        protected JSONObject doInBackground(Object... objects) {
             int responseCode = -1;
+            JSONObject jsonResponse = null;
             try {
                 URL blogFeedUrl = new URL("http://blog.teamtreehouse.com/api/get_recent_summary/?count=" + NUMBER_OF_POSTS);
                 HttpURLConnection connection = (HttpURLConnection) blogFeedUrl.openConnection();
@@ -102,7 +131,7 @@ public class MainListActivity extends ListActivity {
                         responseData += (char) nextCharacter; // The += operator appends the character to the end of the string
                     }
 
-                    JSONObject jsonResponse = new JSONObject(responseData);
+                    jsonResponse = new JSONObject(responseData);
                     String status = jsonResponse.getString("status");
                     Log.v(TAG, status);
 
@@ -128,7 +157,17 @@ public class MainListActivity extends ListActivity {
                 Log.e(TAG, "Exception caught :", e);
             };
 
-            return "Code" + responseCode;
+            return jsonResponse;
+
+
+        }
+
+        @Override
+        protected void onPostExecute(JSONObject result){
+            mBlogData = result;
+            updateList();
         }
     }
+
+
 }
